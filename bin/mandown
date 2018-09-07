@@ -1,0 +1,116 @@
+#!/bin/bash
+
+_show_help () {
+  echo -e "\n  mandown - Markdown tools for man pages\n"
+#  echo -e "[Commands]\n"
+#  echo -e "mandown"
+  echo -e "  [Usage]\n"
+  echo -e "  mandown [options] PAGE"
+  echo -e "\n  [Options]\n"
+  # echo "  --edit[=cmd]                  open output file in editor (default /bin/nano)"
+  echo -e "  --save-html                   save print converted html man page to file"
+  echo -e "  --show-html                   print converted html man page to screen"
+  echo -e "  --input <file>                input man page from html input"
+  echo -e "  --output <file>               save converted markdwown to file"
+  echo -e "  --pretty                      show rendered markdown to stdout"
+  echo -e "  --debug                       show debug data and environment variables"
+  # echo "  --open[=cmd]                  open output file in program (default system mime-type)"
+  echo -e "\n"
+}
+
+
+man2html () {
+  # MANROFFSEQ=
+  PAGE=${1:-$MAN_PAGE}
+  MANPAGER="cat"
+  MANWIDTH=160
+  MANENCODING="utf8"
+  MANTROFFSTRING="t -m man -m www"
+  MANTROFF="--troff --preprocessor=$MANTROFFSTRING"
+  MANFLAGS="--update --ascii --no-hyphenation --no-justification --troff --encoding $MANENCODING"
+  man $MANFLAGS --troff-device=html $PAGE
+}
+
+
+man2md () {
+  echo "man2html $MAN_PAGE | node ./index.js"
+  man2html $MAN_PAGE | node ./index.js
+}
+
+
+SAVE_MDOUT="no"
+SAVE_HTML="no"
+RENDER_MDOUT="no"
+EDIT_MDOUT=
+OUT_DIR=./
+OUT_FILE=
+MAN_FILE=
+MAN_PAGE=
+
+PROGNAME=${0##*/}
+PROGVERSION=0.0.1
+
+POSITIONAL=()
+
+if [ $# == 0 ]; then
+  _show_help
+fi
+
+while [[ $# -gt 0 ]]
+do
+  key="$1"
+  case $key in
+    -h|--help)
+       _show_help
+       exit 0
+       ;;
+    -v|--version)
+       echo "Version $PROGVERSION"
+       exit 0
+       ;;
+    --pretty)
+      RENDER_MDOUT="yes"
+      shift
+      ;;
+    --debug)
+      DEBUG_MANDOWN="yes"
+      shift
+      ;;
+    -i|--input)
+      MAN_FILE="$2"
+      shift
+      shift
+      ;;
+    -o|--output)
+      echo "opt"
+      OUT_FILE="$2"
+      shift
+      shift
+       ;;
+    --)
+       shift
+       break
+       ;;
+    *)
+      MAN_PAGE=$key
+      shift
+      ;;
+   esac
+done
+
+if [ "$DEBUG_MANDOWN" = "yes" ]; then
+
+  NODE_DEBUG="html2md.js"
+  echo "CWD: $PWD"
+  echo "SAVE_MDOUT=$SAVE_MDOUT"
+  echo "EDIT_MDOUT=$EDIT_MDOUT"
+  echo "RENDER_MDOUT=$RENDER_MDOUT"
+  echo "OUT_DIR=$OUT_DIR"
+  echo "OUT_FILE=$OUT_FILE"
+  echo "MAN_FILE=$MAN_FILE"
+  echo "MAN_PAGE=$MAN_PAGE"
+
+fi
+
+MANDOWN_ENV="{\"page\":\"$MAN_PAGE\",\"debug\":\"$DEBUG_MANDOWN\",\"pretty\":\"$RENDER_MDOUT\"}"
+MANDOWN_ENV=$MANDOWN_ENV man2md $MAN_PAGE

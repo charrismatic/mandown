@@ -1,0 +1,11 @@
+[ MD_FORMAT ]
+
+codeBlockStyle='fenced'
+linkStyle='inlined'
+linkReferenceStyle='full'
+headingStyle='atx'
+strongDelimiter='**'
+emDelimiter='_'
+fence='```'
+bulletListMarker='*'
+hr='---'
