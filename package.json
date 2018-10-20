@@ -8,14 +8,20 @@
   },
   "scripts": {
     "mandown": "bin/mandown",
+    "test": "bin/mandown ls",
     "help": "bin/mandown --help"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "chalk": "^2.4.1",
+    "jsdom": "^12.1.0",
     "marked": "^0.5.0",
     "marked-terminal": "^3.1.1",
     "turndown": "^5.0.1",
     "turndown-plugin-gfm": "^1.0.2"
+  },
+  "devDependencies": {
+    "rollup": "^0.66.2"
   }
 }

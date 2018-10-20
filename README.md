@@ -23,11 +23,13 @@
  - man2md convert man page to markdown
  - man2html convert man page to html
 
-These are used individually by mandown. Converting the man pages takes several steps.
-The man to html process uses only Linux packages (see Groff/Troff).  Converting the
-html formatted  man page to markdown is done in Node.js.  There is an option to
-render the markdown back to its clean presentation from node, however this will look
-similar to the original presentation of the man page.
+These are used individually by mandown. Converting the man pages to md takes multiple steps. This also allows the user to call the functions separately for more customizable uses.  
+
+The man-to-html process uses the default (linux) packages used by the man command to build manpages from the original sourece (see Groff/Troff).  
+
+Converting the man page html To markdown is done in Node.js. The original package used for converting is Turndown.js but has been forked to use JSDOM to provide a browserless dom parser.
+
+In addition to converting the man page to markdown you may also render the markdown directly in the terminal (in a addition to output to file) using a plugin for the 'Marked' markdown package.
 
 
 ### REQUIRES:
@@ -36,9 +38,7 @@ Linux:
 
  - groff GNU troff text-formatting system
 
-This is a pretty standard package. In case you have trouble converting the man pages to html
-try install the full `groff` package in case your distribution has not included the groff
-html formatting package.
+This is a standard package. In case you have trouble converting the man pages to html try installing the full `groff` package in case your distribution has only included the groff core.
 
 
 Node:
