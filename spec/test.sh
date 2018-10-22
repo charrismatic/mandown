@@ -2,26 +2,24 @@
 
 TEST_NUM=${1:-"default"}
 
+SCRIPT_PATH="$(readlink -f -- $BASH_SOURCE)"
+NODE_CWD="$(dirname -- $SCRIPT_PATH)"
+
 if [ "$TEST_NUM" = "default" ]; then
-
-  # Via arguments.
-  ./bin/mandown man
-
-elif [[ $TEST_NUM = "pipe" ]]; then
-  # Via pipe.
-  cat ./spec/man.html | DEBUG_MANDOWN="yes" ./bin/mandown
+   DEBUG_MANDOWN="yes" $NODE_CWD/../bin/mandown man
+elif [ "$TEST_NUM" = "pipe" ]; then
+  cat ./spec/test.html | DEBUG_MANDOWN="yes" $NODE_CWD/../bin/mandown
+elif [ "$TEST_NUM" = "groff" ]; then
+  zcat "$(man --where man)" | groff -p -t -me -T html | $NODE_CWD/../bin/mandown
 fi
 
-# # Via pipe from a file, better for larger strings.
-# echo "pass in this string as input" > input.txt
-# cat input.txt | ./example-script
-
-
+# RESULT
 ECODE=$?
-if [ $ECODE -eq 0 ]
-then
-  echo "Test $TEST_NUM passed."
+
+if [ $ECODE -eq 0 ]; then
+  # PASS
+  echo -e "Test: \033[4m\033[35m[$TEST_NUM]\033[0m \033[00;32mPASSED \033[0m \n"
 else
-  echo "Test $TEST_NUM Failed with code $ECODE"
-  echo "Could not create file" >&2
+  # FAIL
+  echo -e "Test: \033[4m\033[35m [$TEST_NUM]\033[0m \033[01;31mFAILED \033[0mwith code \033[01;43;37m$ECODE\033[0m"
 fi

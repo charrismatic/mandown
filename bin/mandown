@@ -1,6 +1,9 @@
 #!/bin/bash
 
-NODE_CWD=$(dirname -- "$(readlink -f -- "$BASH_SOURCE")")
+SCRIPT_PATH="$(readlink -f -- $BASH_SOURCE)"
+NODE_CWD="$(dirname -- $SCRIPT_PATH)"
+
+echo "CWD: $NODE_CWD "
 
 # DEFAULTS
 SAVE_MDOUT="no"
@@ -11,18 +14,51 @@ OUT_DIR=./
 OUT_FILE=
 MAN_FILE=
 MAN_PAGE=
-
 PROGVERSION=0.0.1
 PROGNAME=${0##*/}
 POSITIONAL=()
 
 
-echo "is a pipe $(_is_pipe)"
+_is_pipe () {
+  if [ -t 0 ]; then
+    echo "interactively"
+  else
+    echo "pipe or file"
+  fi
+}
+
+
+_has_data () {
+  while read -r line ; do
+    # echo $line
+    if [ -z "$line" ]; then
+      # echo "line is empty continue"
+      continue
+    else
+      #  echo "input was found $line"
+      return 1
+    fi
+  done
+  # echo "no input was found"
+  return 0
+}
+
+_is_error () {
+  if [ ! $PIPESTATUS -eq 0 ]; then
+    echo "Process exited with status code $?"
+    echo "$?"
+    echo "$0"
+    exit "$PIPESTATUS"
+  else
+    return
+  fi
+}
+
 
 _show_help () {
   echo -e "\n  mandown - Markdown tools for man pages\n"
-#  echo -e "[Commands]\n"
-#  echo -e "mandown"
+  #  echo -e "[Commands]\n"
+  #  echo -e "mandown"
   echo -e "  [Usage]\n"
   echo -e "  mandown [options] PAGE"
   echo -e "\n  [Options]\n"
@@ -39,8 +75,95 @@ _show_help () {
   echo -e "\n"
 }
 
-while [[ $# -gt 0 ]]
-do
+
+
+man2html () {
+  # MANROFFSEQ=
+  PAGE=${1:-$MAN_PAGE}
+  MANWIDTH=140
+  MANPAGER="cat"
+  MANENCODING="utf8"
+  MANTROFFSTRING="t -m mandoc -m www"
+  MANTROFF="--preprocessor=$MANTROFFSTRING"
+  MANFLAGS="--no-hyphenation --no-justification --encoding $MANENCODING"
+  echo "MANWIDTH=140 man $MANFLAGS --troff-device=html $PAGE"
+  man $MANFLAGS --troff-device=html $PAGE
+}
+
+
+man2md () {
+  # zcat $(man --where) | groff -m www -m man -m doc -k -t -j -N -P-pa0 -P-l -P-r -Thtml
+  # MANROFFOPT=-l man --encoding=UTF-8 --preprocessor=pt --nh --nj --troff-device=html ls
+  echo "man2html $MAN_PAGE | $NODE_CWD/../index.js"
+  MANWIDTH=120 man2html $MAN_PAGE | node $NODE_CWD/../index.js
+}
+
+man2txt () {
+  #zcat $(man --where nm-settings) | groff -m www -m man -l -E -k -j -t -N  -C -Tdvi
+  #MANWIDTH=120 MANPAGER=cat man --encoding=UTF-8 --nh --nj bash
+  # man --pager= --ascii
+  MANWIDTH=120 man --pager=cat --encoding=UTF-8  $PAGE
+}
+
+_dump_debug_vars () {
+  echo "SAVE_MDOUT=$SAVE_MDOUT"
+  echo "EDIT_MDOUT=$EDIT_MDOUT"
+  echo "RENDER_MDOUT=$RENDER_MDOUT"
+  echo "OUT_DIR=$OUT_DIR"
+  echo "OUT_FILE=$OUT_FILE"
+  echo "MAN_FILE=$MAN_FILE"
+  echo "MAN_PAGE=$MAN_PAGE"
+}
+
+
+
+_cleanup () {
+  unset EDIT_MDOUT
+  unset MAN_FILE
+  unset MANFLAGS
+  unset MANPAGER
+  unset MANTROFF
+  unset MANTROFFSTRING
+  unset MAN_PAGE
+  unset MANENCODING
+  unset MANDOWN_ENV
+  unset MANWIDTH
+  unset OUT_DIR
+  unset OUT_FILE
+  unset PAGE
+  unset POSITIONAL
+  unset PROGNAME
+  unset PROGVERSION
+  unset PWD
+  unset RENDER_MDOUT
+  unset SAVE_HTML
+  unset SAVE_MDOUT
+}
+
+
+
+# Handle No Argumets given to command
+# -----------------------------------
+if [ $# == 0 ]; then
+
+  # Check if interactive, tty, or pipe
+  echo -e "process is tty or pipe?: $(_is_pipe)"
+
+  # check if stdin has data
+  DATA_IN="$(_has_data)"
+  echo -e "process has data?: $DATA_IN"
+  if [[ $DATA_IN != 0 ]]; then
+    man2md
+  else
+    # if passes previous check if errors
+    echo -e "process has errors?: $(_is_error)"
+    _show_help
+  fi
+
+fi
+
+
+while [[ $# -gt 0 ]]; do
   key="$1"
   case $key in
     -h|--help)
@@ -81,74 +204,21 @@ do
    esac
 done
 
-
-if [ $# == 0 ]; then
-  echo "test pipe "
-  test _is_pipe
-  echo "is a pipe $(_is_pipe)"
-
-  echo "pipe $PIPESTATUS"
-  echo "$-"
-  echo "$?"
-  echo "$0"
-  _show_help
-fi
-
-
-_is_pipe () {
-  # [[ -t 1 ]] && echo 'TTY'
-  [[ -p /dev/stdout ]] && echo 'pipe'
-  # [[ ! -t 1 && ! -p /dev/stdout ]] && echo 'redirected'
-}
-
-man2html () {
-  # MANROFFSEQ=
-  PAGE=${1:-$MAN_PAGE}
-  MANPAGER="cat"
-  MANWIDTH=160
-  MANENCODING="utf8"
-  MANTROFFSTRING="t -m man -m www"
-  MANTROFF="--troff --preprocessor=$MANTROFFSTRING"
-  MANFLAGS="--update --ascii --no-hyphenation --no-justification --troff --encoding $MANENCODING"
-  man $MANFLAGS --troff-device=html $PAGE
-}
-
-
-man2md () {
-  #echo "NODECWD: $NODE_CWD"
-  #echo "man2html $MAN_PAGE | node ./index.js"
-  man2html $MAN_PAGE | node $NODE_CWD/../index.js
-}
-
+MANDOWN_ENV="{\"page\":\"$MAN_PAGE\",\"debug\":\"$DEBUG_MANDOWN\",\"pretty\":\"$RENDER_MDOUT\",\"save_html\":\"$SAVE_HTML\",\"show_html\":\"$SHOW_HTML\"}"
 
 if [ "$DEBUG_MANDOWN" = "yes" ]; then
+  _dump_debug_vars
   NODE_DEBUG="html2md.js"
-  echo "CWD: $PWD"
-  echo "SAVE_MDOUT=$SAVE_MDOUT"
-  echo "EDIT_MDOUT=$EDIT_MDOUT"
-  echo "RENDER_MDOUT=$RENDER_MDOUT"
-  echo "OUT_DIR=$OUT_DIR"
-  echo "OUT_FILE=$OUT_FILE"
-  echo "MAN_FILE=$MAN_FILE"
-  echo "MAN_PAGE=$MAN_PAGE"
 fi
 
-
-#
-MANDOWN_ENV="{
-  \"page\":\"$MAN_PAGE\",
-  \"debug\":\"$DEBUG_MANDOWN\",
-  \"pretty\":\"$RENDER_MDOUT\",
-  \"save_html\":\"$SAVE_HTML\"
-}"
-
-
-echo "is a pipe $(_is_pipe)"
-
+# MAIN PROCESS
+# -----------------------------------------------------------------------------
 if [ "$OUTPUT" = "yes" ]; then
+  # TODO: HANDLE FILE WRITING FROM NODE
   MANDOWN_ENV=$MANDOWN_ENV man2md $MAN_PAGE > $OUT_FILE
 else
   MANDOWN_ENV=$MANDOWN_ENV man2md $MAN_PAGE
 fi
 
+_cleanup
 exit 0
