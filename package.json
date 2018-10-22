@@ -1,6 +1,6 @@
 {
   "name": "mandown",
-  "version": "1.0.0",
+  "version": "1.1.1",
   "description": "Markdown utility for Linux man pages",
   "main": "index.js",
   "directories": {
