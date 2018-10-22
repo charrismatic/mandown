@@ -7,21 +7,30 @@
     "lib": "lib"
   },
   "scripts": {
+    "sync": "browser-sync start --server --files \"css/*.css\"",
+    "build": "rollup -c --environment INCLUDE_DEPS,NODE_ENV:development",
+    "clean": "rm -rf ./build/* && cp -r ./source/modules/main/* ./build/",
     "mandown": "bin/mandown",
-    "test": "bin/mandown ls",
-    "help": "bin/mandown --help"
+    "help": "bin/mandown --help",
+    "deploy": "rollup -c --environment INCLUDE_DEPS,NODE_ENV:production",
+    "dev": "rollup -c -w",
+    "test": "spec/test.sh default"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "chalk": "^2.4.1",
-    "jsdom": "^12.1.0",
-    "marked": "^0.5.0",
-    "marked-terminal": "^3.1.1",
-    "turndown": "^5.0.1",
-    "turndown-plugin-gfm": "^1.0.2"
+    "jsdom": "^12.2.0",
+    "marked": "^0.5.1",
+    "marked-terminal": "^3.1.1"
   },
   "devDependencies": {
-    "rollup": "^0.66.2"
+    "chalk": "^2.4.1",
+    "rollup": "^0.58.1",
+    "browser-sync": "^2.24.7",
+    "rollup-plugin-cleanup": "^2.0.1",
+    "rollup-plugin-commonjs": "^9.1.0",
+    "rollup-plugin-filesize": "^1.5.0",
+    "rollup-plugin-node-resolve": "^3.3.0",
+    "rollup-plugin-uglify": "^3.0.0"
   }
 }
