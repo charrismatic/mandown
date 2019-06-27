@@ -20,7 +20,7 @@
   "license": "ISC",
   "dependencies": {
     "jsdom": "^12.2.0",
-    "marked": "^0.5.1",
+    "marked": "^0.6.1",
     "marked-terminal": "^3.1.1"
   },
   "devDependencies": {
