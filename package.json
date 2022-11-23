@@ -26,7 +26,7 @@
   "devDependencies": {
     "chalk": "^2.4.1",
     "rollup": "^0.58.1",
-    "browser-sync": "^2.24.7",
+    "browser-sync": "^2.27.10",
     "rollup-plugin-cleanup": "^2.0.1",
     "rollup-plugin-commonjs": "^9.1.0",
     "rollup-plugin-filesize": "^1.5.0",
